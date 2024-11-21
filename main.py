@@ -3,7 +3,6 @@ from oracledb import DatabaseError
 from sqlalchemy import create_engine ### pip install sqlalchemy
 import pandas as pd
 import json
-import re
 
 with open('secret.txt', 'r', encoding='utf-8') as f:
     creds = json.load(f)   
@@ -12,22 +11,6 @@ with open('secret.txt', 'r', encoding='utf-8') as f:
     dsn = creds['dsn']
 
 engine = create_engine(f"oracle+oracledb://{user}:{pwd}@{dsn}")
-
-def criar_tabela():
-    arquivo_sql = "FIAP3.sql"
-    with open(arquivo_sql, "r", encoding="utf-8") as f:
-        comandos = f.read()
-        
-    with oracledb.connect(dsn=dsn, user=user, password=pwd) as conn:
-        try:
-            cursor = conn.cursor()
-            for comando in comandos.split(";"):
-                if comando.strip(): 
-                    cursor.execute(comando)
-                    
-            conn.commit()
-        except DatabaseError as dbe:
-            print(dbe.args[0])
 
 def obter_entrada(n_opcoes:int, texto='Selecione uma opção de ') -> int:
     o = ''
@@ -52,6 +35,19 @@ def obter_regiao():
         print(i + 1, " - ", regiao)
         
     return obter_entrada(len(regioes),"Informe o ID da região associada: ")
+
+def exportar(dados: pd.DataFrame):
+    nome_arquivo = "projetos_sustentaveis.json"
+    try:
+        json_str = dados.to_json(orient="records", force_ascii=False, indent=4)
+
+        with open(nome_arquivo, 'w', encoding='utf-8') as file:
+            file.write(json_str)
+            
+        print(f"\nExportado com sucesso!'\n")
+        
+    except Exception as e:
+        print("\nErro na criação do arquivo.\n", e)    
 
 def inserir():
     print(100*"=")
@@ -186,10 +182,11 @@ def excluir():
 
 def consultar():
     consultas = [
-        "SELECT ps.id_projeto, ps.descricao, ps.custo FROM projetos_sustentaveis ps LEFT JOIN tipo_fontes tf ON ps.id_tipo_fonte = tf.id_tipo_fonte WHERE tf.id_tipo_fonte = :1 ORDER BY ps.descricao ASC", 
+        "SELECT ps.id_projeto, ps.descricao, ps.status, ps.custo, tf.nome FROM projetos_sustentaveis ps LEFT JOIN tipo_fontes tf ON ps.id_tipo_fonte = tf.id_tipo_fonte WHERE tf.id_tipo_fonte = :1 ORDER BY ps.descricao ASC", 
         "SELECT id_projeto, descricao, status, custo FROM projetos_sustentaveis WHERE custo > :1 ORDER BY id_projeto ASC",
         "SELECT id_projeto, descricao, status FROM projetos_sustentaveis WHERE status = :1 ORDER BY id_projeto ASC"
     ]
+    
     
     print(100*"=")
     print("CONSULTAR\n")
@@ -218,8 +215,7 @@ def consultar():
                 resposta = cursor.execute(sql, (entrada,))
                 dados = resposta.fetchmany(10) 
             
-            for dado in dados:
-                print(str(dado).replace(", ", " - "))
+            return dados
         except DatabaseError as dbe:
             print("Erro:", dbe.args[0])
         except Exception as e:
@@ -243,7 +239,25 @@ def menu():
         case 3:
             excluir()
         case 4:
-            consultar()
+            consulta = consultar()
+            if consulta:
+                dados_projeto = {
+                    "ID_PROJETO": [dado[0] for dado in consulta],
+                    "DESCRICAO": [dado[1] for dado in consulta],
+                    "STATUS": [dado[2]  for dado in consulta],
+                    "CUSTO": [dado[3] if len(dado) > 3  else None for dado in consulta],
+                    "TIPO_FONTE": [dado[4] if len(dado) > 4 else None for dado in consulta],
+                }
+    
+                df_projeto = pd.DataFrame(dados_projeto, index=None)
+                print(df_projeto.head(10))
+                
+                opcao = input("Deseja exportar essa consulta? S/N: ").strip()
+                if opcao.lower() == 's':
+                    exportar(df_projeto)
+            
+            else:
+                print("Nenhum dado encontrado")
         case _:
             print("Saindo ...")
             quit(1)
