@@ -1,8 +1,0 @@
-CREATE TABLE tb_eficiencia_setor (id_eficiencia INTEGER NOT NULL,id_empresa INTEGER NOT NULL,setor VARCHAR2(30),eficiencia_energetica NUMBER(3, 2),gasto_total NUMBER(7, 2),visao_geral VARCHAR2(100))
-ALTER TABLE tb_eficiencia_setor ADD CONSTRAINT tb_eficiencia_setor_pk PRIMARY KEY ( id_eficiencia )
-CREATE TABLE tb_empresas (id_empresa INTEGER NOT NULL,id_tipo INTEGER NOT NULL,nome VARCHAR2(30),local_emp VARCHAR2(2))
-ALTER TABLE tb_empresas ADD CONSTRAINT tb_industria_pk PRIMARY KEY ( id_empresa )
-CREATE TABLE tb_tipo_empresa (id_tipo INTEGER NOT NULL,tipo VARCHAR2(50))
-ALTER TABLE tb_tipo_empresa ADD CONSTRAINT tb_tipo_pk PRIMARY KEY ( id_tipo )
-ALTER TABLE tb_eficiencia_setor ADD CONSTRAINT tb_efic_setor_tb_empresa_fk FOREIGN KEY ( id_empresa ) REFERENCES tb_empresas ( id_empresa )
-ALTER TABLE tb_empresas ADD CONSTRAINT tb_industria_tb_tipo_fk FOREIGN KEY ( id_tipo ) REFERENCES tb_tipo_empresa ( id_tipo )

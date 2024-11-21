@@ -8,8 +8,16 @@ Para isso você precisa abrir um novo terminal e executar os seguintes comandos:
     ```
 * Instale as bibliotecas usadas
     ```bash
-    pip install oracldb
+    pip install oracldb sqlalchemy
     ```
     ```bash
     pip install pandas
     ```
+
+### Rodando a aplicação 
+Abra um terminal e rode o seguinte comando:
+```bash
+python main.py
+# ou
+pyhton3 main.py
+```
