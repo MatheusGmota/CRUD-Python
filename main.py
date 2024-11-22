@@ -12,6 +12,26 @@ with open('secret.txt', 'r', encoding='utf-8') as f:
 
 engine = create_engine(f"oracle+oracledb://{user}:{pwd}@{dsn}")
 
+def criar_tabela():
+    try:
+        with oracledb.connect(user=user, password=pwd, dsn=dsn) as conn:
+            cursor = conn.cursor()
+
+                
+            with open("create.sql", 'r', encoding='utf-8') as file:
+                sql_commands = file.read()
+            
+            commands = sql_commands.split(';')
+            for command in commands:
+                command = command.strip()
+                if command:
+                    cursor.execute(command)
+            
+            conn.commit()
+            
+    except DatabaseError as e:
+        print("Erro ao executar os comandos SQL:", e)
+        
 def obter_entrada(n_opcoes:int, texto='Selecione uma opção de ') -> int:
     o = ''
     _ = [str(i+1) for i in range(n_opcoes)]
@@ -223,6 +243,7 @@ def consultar():
     
         
 def menu():
+    criar_tabela()
     print(100*"=")
     print("MENU\n")
     
